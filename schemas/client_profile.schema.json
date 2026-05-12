@@ -1,0 +1,650 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ClientProfile",
+  "description": "Structured client profile produced by the onboarding agent after completing all 10 discovery stages. This file defines what profile.json must contain and what each field means.",
+  "type": "object",
+  "required": [
+    "client_id",
+    "created_at",
+    "completed_stages",
+    "business",
+    "offer",
+    "audience",
+    "voice",
+    "goals",
+    "platforms",
+    "competitors",
+    "constraints",
+    "workflow",
+    "readiness_score"
+  ],
+  "properties": {
+
+    "client_id": {
+      "type": "string",
+      "description": "Lowercase hyphenated client identifier. Must match the folder name under memory/client_profiles/. Example: acme-corp"
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the onboarding session was first started"
+    },
+
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the profile was compiled (Stage 10 completed)"
+    },
+
+    "completed_stages": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      },
+      "description": "List of stage numbers that have been completed and saved. Used by the startup routine to determine where to resume."
+    },
+
+    "readiness_score": {
+      "type": "object",
+      "required": ["label", "points"],
+      "description": "Client readiness signal calculated at Stage 10. Based on completeness and depth of all collected data.",
+      "properties": {
+        "label": {
+          "type": "string",
+          "enum": ["High", "Medium", "Low"],
+          "description": "High = 85-100pts. Medium = 65-84pts. Low = below 65pts."
+        },
+        "points": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Numeric score. Starts at 100. Deductions: -5 per vague optional field, -15 per vague required field, -20 per skipped required field, -10 per refused field."
+        },
+        "flags": {
+          "type": "array",
+          "description": "All flagged fields that contributed to score deductions",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "The field path that was flagged, e.g. voice.tone_descriptors"
+              },
+              "flag_type": {
+                "type": "string",
+                "enum": ["vague", "skipped", "refused"]
+              },
+              "note": {
+                "type": "string",
+                "description": "Brief explanation of why it was flagged"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "business": {
+      "type": "object",
+      "required": ["name", "industry", "description", "differentiator", "stage"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Business or brand name"
+        },
+        "industry": {
+          "type": "string",
+          "description": "The industry or sector they operate in"
+        },
+        "description": {
+          "type": "string",
+          "description": "What the business does in plain English. Minimum 2 sentences. Must be specific enough for a stranger to understand."
+        },
+        "differentiator": {
+          "type": "string",
+          "description": "What makes them different from competitors. Must be specific — not 'we care more' or 'we deliver results'."
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["startup", "growth", "established", "enterprise"],
+          "description": "Where the business is in its lifecycle"
+        },
+        "business_model": {
+          "type": "string",
+          "enum": ["B2B", "B2C", "B2B2C", "marketplace", "nonprofit", "other"],
+          "description": "Who the business sells to"
+        },
+        "years_operating": {
+          "type": "number",
+          "description": "Approximate number of years in business"
+        },
+        "location": {
+          "type": "string",
+          "description": "Primary location or market served (city, country, or 'global')"
+        },
+        "team_size": {
+          "type": "string",
+          "description": "Approximate number of people. Can be a range or descriptor: '1 (solo)', '2-5', '10-50', etc."
+        }
+      }
+    },
+
+    "offer": {
+      "type": "object",
+      "required": ["primary_offer", "outcomes", "objections"],
+      "properties": {
+        "primary_offer": {
+          "type": "string",
+          "description": "The main product, service, or program the client sells"
+        },
+        "secondary_offers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other products or services offered, if any"
+        },
+        "price_range": {
+          "type": "string",
+          "description": "Approximate price. Can be a range or descriptor: '$97', '$1,000-$5,000', 'custom enterprise pricing', etc."
+        },
+        "price_tier": {
+          "type": "string",
+          "enum": ["free", "low_ticket", "mid_ticket", "high_ticket", "enterprise", "subscription"],
+          "description": "Broad pricing category. low_ticket = under ~$500. mid_ticket = $500-$5k. high_ticket = $5k+."
+        },
+        "delivery_model": {
+          "type": "string",
+          "enum": ["online", "in_person", "hybrid", "digital_product", "done_for_you", "coaching", "saas", "other"],
+          "description": "How the offer is delivered to the client"
+        },
+        "outcomes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "description": "Specific, concrete results clients get from the offer. Must be measurable or tangible — not 'they grow their business'."
+        },
+        "objections": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Real objections heard from prospects who are close to buying but haven't yet"
+        },
+        "transformation": {
+          "type": "string",
+          "description": "The before/after story. What does the client's situation look like before vs. after working with this business?"
+        }
+      }
+    },
+
+    "audience": {
+      "type": "object",
+      "required": ["primary_segment", "pain_points"],
+      "properties": {
+        "primary_segment": {
+          "type": "string",
+          "description": "The primary target audience described specifically. Not just 'entrepreneurs' — enough detail to picture a real person."
+        },
+        "secondary_segments": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other audience segments served, if any"
+        },
+        "demographics": {
+          "type": "object",
+          "description": "Factual descriptors of the audience",
+          "properties": {
+            "age_range": {
+              "type": "string",
+              "description": "e.g. '30-45', '25-35', 'mostly 40s'"
+            },
+            "gender_skew": {
+              "type": "string",
+              "description": "e.g. 'mostly women', 'mixed', 'predominantly male'"
+            },
+            "income_range": {
+              "type": "string",
+              "description": "Household or business revenue range, if relevant"
+            },
+            "education_level": {
+              "type": "string",
+              "description": "Typical education background, if relevant"
+            },
+            "job_titles": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "For B2B: job titles of the people who buy or influence the decision"
+            },
+            "company_sizes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "For B2B: company size ranges by headcount or revenue. e.g. '10-50 employees', '$1M-$10M revenue'"
+            },
+            "geographies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Where the audience is located"
+            }
+          }
+        },
+        "psychographics": {
+          "type": "object",
+          "description": "Mindset, beliefs, and motivations of the audience",
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "What the audience cares about deeply — beyond their immediate problem"
+            },
+            "aspirations": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "What they want to achieve, become, or be known for"
+            },
+            "frustrations": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Day-to-day frustrations — not just the big problem, but the texture of what bothers them"
+            },
+            "self_identity": {
+              "type": "string",
+              "description": "How they see themselves — the identity label they'd use: 'I'm a founder', 'I'm a creator', etc."
+            },
+            "buying_triggers": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "What causes them to finally decide to buy — the tipping point events or emotions"
+            }
+          }
+        },
+        "pain_points": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "description": "Specific, detailed pain points. Must be detailed enough to write content to them — not just 'they need more leads'."
+        },
+        "existing_beliefs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What the audience already believes before encountering this brand — including misconceptions that hold them back"
+        },
+        "online_hangouts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Where the audience spends time online — platforms, communities, newsletters, podcasts"
+        }
+      }
+    },
+
+    "voice": {
+      "type": "object",
+      "required": ["tone_descriptors", "never_sound_like"],
+      "properties": {
+        "tone_descriptors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "description": "3-5 adjectives describing the brand voice. Generic words like 'professional' must be accompanied by examples or clarification."
+        },
+        "never_sound_like": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What the brand should never sound like. At least one specific example — not just 'don't be salesy'."
+        },
+        "formality": {
+          "type": "string",
+          "enum": ["very_casual", "casual", "balanced", "professional", "very_formal"],
+          "description": "Where the brand sits on the formality spectrum"
+        },
+        "reference_content": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "What the reference is (brand name, publication, creator, type of content)"
+              },
+              "url": {
+                "type": "string",
+                "description": "Link if available"
+              },
+              "what_they_like": {
+                "type": "string",
+                "description": "Specifically what they like about it — tone, topics, format, attitude, etc."
+              }
+            }
+          },
+          "description": "Content, brands, or creators the client loves — and specifically what they like about them"
+        },
+        "anti_reference_content": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content styles, brands, or approaches the client hates or wants to avoid"
+        },
+        "personality_in_one_sentence": {
+          "type": "string",
+          "description": "If the brand were a person, describe them in one sentence. e.g. 'A sharp-witted strategist who tells it straight and has no patience for fluff.'"
+        }
+      }
+    },
+
+    "goals": {
+      "type": "object",
+      "required": ["primary_goal", "primary_kpi"],
+      "properties": {
+        "primary_goal": {
+          "type": "string",
+          "enum": [
+            "lead_generation",
+            "brand_authority",
+            "community_building",
+            "direct_sales",
+            "retention",
+            "awareness"
+          ],
+          "description": "The single most important business outcome content should drive"
+        },
+        "secondary_goals": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional goals content should support"
+        },
+        "primary_kpi": {
+          "type": "string",
+          "description": "The measurable metric that defines success. Must be specific: 'booked discovery calls per month', not 'more engagement'."
+        },
+        "target_kpi_value": {
+          "type": "string",
+          "description": "The actual number or threshold being aimed for, if known. e.g. '10 booked calls/month', '500 new subscribers in 90 days'"
+        },
+        "timeline": {
+          "type": "string",
+          "description": "When results are expected or when key dates occur. e.g. '3-6 months', 'product launch in September'"
+        },
+        "content_budget_signal": {
+          "type": "string",
+          "enum": ["bootstrap", "moderate", "invested", "unknown"],
+          "description": "Rough signal of how much is being invested in content. bootstrap = minimal; invested = significant budget allocated."
+        },
+        "previous_attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["what", "why_failed"],
+            "properties": {
+              "what": {
+                "type": "string",
+                "description": "What was tried — platform, format, approach"
+              },
+              "why_failed": {
+                "type": "string",
+                "description": "Why it didn't work — from the client's perspective"
+              }
+            }
+          },
+          "description": "Previous content efforts that didn't achieve the desired result"
+        }
+      }
+    },
+
+    "platforms": {
+      "type": "object",
+      "required": ["primary_platform"],
+      "properties": {
+        "primary_platform": {
+          "type": "string",
+          "description": "The single most important platform for content distribution"
+        },
+        "secondary_platforms": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other platforms where content will be distributed"
+        },
+        "formats": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content formats in use. e.g. 'short-form text posts', 'long-form articles', 'carousels', 'email newsletter', 'short-form video'"
+        },
+        "posting_frequency": {
+          "type": "object",
+          "description": "Posting frequency per platform. Keys are platform names (e.g. 'linkedin', 'newsletter', 'instagram').",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "posts_per_week": {
+                "type": "number",
+                "description": "Number of posts per week on this platform"
+              },
+              "posts_per_month": {
+                "type": "number",
+                "description": "Number of posts per month on this platform (use if weekly cadence doesn't apply)"
+              },
+              "notes": {
+                "type": "string",
+                "description": "Any nuance about the cadence for this platform"
+              }
+            }
+          }
+        },
+        "platform_notes": {
+          "type": "object",
+          "description": "Platform-specific operational details",
+          "properties": {
+            "newsletter": {
+              "type": "object",
+              "description": "Email newsletter details",
+              "properties": {
+                "list_size": {
+                  "type": "string",
+                  "description": "Current subscriber count or range"
+                },
+                "platform": {
+                  "type": "string",
+                  "description": "Email platform being used. e.g. Beehiiv, Substack, ConvertKit, Mailchimp, ActiveCampaign"
+                },
+                "open_rate": {
+                  "type": "string",
+                  "description": "Approximate open rate if known"
+                },
+                "send_day": {
+                  "type": "string",
+                  "description": "Preferred or current send day. e.g. 'Tuesday mornings'"
+                }
+              }
+            },
+            "linkedin": {
+              "type": "object",
+              "description": "LinkedIn-specific details",
+              "properties": {
+                "profile_type": {
+                  "type": "string",
+                  "enum": ["personal", "company_page", "both"],
+                  "description": "Whether content goes on personal profile, company page, or both"
+                },
+                "current_followers": {
+                  "type": "string",
+                  "description": "Approximate current follower or connection count"
+                }
+              }
+            },
+            "video": {
+              "type": "object",
+              "description": "Video production capacity",
+              "properties": {
+                "has_production_capacity": {
+                  "type": "boolean",
+                  "description": "Whether the client can film and produce video themselves or has someone who can"
+                },
+                "raw_footage_available": {
+                  "type": "boolean",
+                  "description": "Whether existing raw footage is available for repurposing"
+                },
+                "editing_handled_by": {
+                  "type": "string",
+                  "description": "Who handles video editing. e.g. 'client', 'in-house editor', 'outsourced', 'agency'"
+                }
+              }
+            },
+            "podcast": {
+              "type": "object",
+              "description": "Podcast-specific details",
+              "properties": {
+                "episode_length_minutes": {
+                  "type": "number",
+                  "description": "Typical episode length in minutes"
+                },
+                "publishing_platform": {
+                  "type": "string",
+                  "description": "Where the podcast is hosted and distributed. e.g. Spotify, Apple Podcasts, Buzzsprout"
+                },
+                "current_downloads": {
+                  "type": "string",
+                  "description": "Approximate downloads per episode if known"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "competitors": {
+      "type": "object",
+      "properties": {
+        "direct_competitors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Competitor name or brand"
+              },
+              "what_they_do_well": {
+                "type": "string",
+                "description": "What this competitor does well — from the client's perspective"
+              },
+              "what_they_do_poorly": {
+                "type": "string",
+                "description": "Where this competitor falls short — the gap the client can exploit"
+              }
+            }
+          }
+        },
+        "content_inspirations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Brand, creator, or publication name"
+              },
+              "why_admired": {
+                "type": "string",
+                "description": "Specifically what is admired — tone, format, topics, consistency, etc."
+              },
+              "platform": {
+                "type": "string",
+                "description": "Where this content appears"
+              }
+            }
+          },
+          "description": "Brands or creators the client admires — inside or outside their industry"
+        },
+        "differentiators": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What sets this client apart from their competition — specific and ownable claims"
+        },
+        "do_not_copy": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Specific things competitors do that the client refuses to do or replicate"
+        }
+      }
+    },
+
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "off_limits_topics": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Topics, statements, or angles that must never appear in content"
+        },
+        "compliance_requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "requirement": {
+                "type": "string",
+                "description": "The specific compliance requirement or restriction"
+              },
+              "industry_regulation": {
+                "type": "string",
+                "description": "The regulation or body it comes from. e.g. HIPAA, FCA, SEC, FTC, GDPR"
+              }
+            }
+          }
+        },
+        "sensitive_areas": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Topics or angles that require care but aren't fully off-limits"
+        },
+        "past_problems": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content-related issues that have caused problems in the past"
+        },
+        "explicitly_confirmed_no_constraints": {
+          "type": "boolean",
+          "description": "Set to true if the client explicitly confirmed they have no constraints. Distinguishes 'no constraints' from a skipped stage."
+        }
+      }
+    },
+
+    "workflow": {
+      "type": "object",
+      "required": ["primary_reviewer", "final_approver"],
+      "properties": {
+        "primary_reviewer": {
+          "type": "string",
+          "description": "The person who reviews content first. Can be the same as final_approver."
+        },
+        "additional_reviewers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other people whose input is required before approval"
+        },
+        "final_approver": {
+          "type": "string",
+          "description": "The person whose sign-off means content can be published"
+        },
+        "revision_rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Typical number of revision rounds expected before approval"
+        },
+        "turnaround_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many business days the client typically needs to review and provide feedback"
+        },
+        "feedback_format": {
+          "type": "string",
+          "enum": ["comments_in_doc", "email", "loom_video", "in_person", "slack", "other"],
+          "description": "How the client prefers to give feedback"
+        },
+        "preferred_delivery_format": {
+          "type": "string",
+          "description": "How the client wants content delivered for review. e.g. 'Google Doc', 'Notion page', 'email', 'shared drive'"
+        }
+      }
+    }
+
+  }
+}

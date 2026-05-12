@@ -1,0 +1,10 @@
+# Brainstorm visual companion
+.superpowers/
+
+# macOS
+.DS_Store
+
+# Client data — contains sensitive business information
+# Remove this line if you want to track client profiles in git
+memory/client_profiles/*/
+!memory/client_profiles/.gitkeep
